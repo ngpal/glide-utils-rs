@@ -50,7 +50,7 @@ pub async fn receive_file(stream: &mut TcpStream, save_path: &str) -> Result<()>
                 }
             }
 
-            println!("\nFile transfer completed: {}", filename);
+            println!("\nFile transfer completed: {}\r", filename);
             Ok(())
         }
         _ => Err(std::io::Error::new(
@@ -89,6 +89,6 @@ pub async fn send_file(stream: &mut TcpStream, path: &str) -> Result<()> {
         stream.write_all(chunk_msg.as_slice()).await?;
     }
 
-    println!("File sent successfully: {}", file_name);
+    println!("File sent successfully: {}\r", file_name);
     Ok(())
 }
