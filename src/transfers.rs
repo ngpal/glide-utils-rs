@@ -1,3 +1,4 @@
+use log::{info, trace};
 use std::io::{Result, Write};
 use std::path::Path;
 use tokio::fs::create_dir_all;
@@ -32,7 +33,7 @@ pub async fn receive_file(stream: &mut TcpStream, save_path: &str) -> Result<()>
                         total_bytes_received += data.len() as u32;
 
                         // Print progress (optional)
-                        print!(
+                        info!(
                             "Progress: {}/{} bytes ({:.2}%)\r",
                             total_bytes_received,
                             file_size,
@@ -50,12 +51,15 @@ pub async fn receive_file(stream: &mut TcpStream, save_path: &str) -> Result<()>
                 }
             }
 
-            println!("\nFile transfer completed: {}\r", filename);
+            info!("\nFile transfer completed: {}\r", filename);
             Ok(())
         }
-        _ => Err(std::io::Error::new(
+        data => Err(std::io::Error::new(
             std::io::ErrorKind::InvalidData,
-            "Unexpected transmission type, expected Metadata",
+            format!(
+                "Unexpected transmission type, expected Metadata, recieved {:#?}",
+                data
+            ),
         )
         .into()),
     }

@@ -1,3 +1,4 @@
+use log::trace;
 use tokio::{
     io::{AsyncReadExt, Result},
     net::TcpStream,
@@ -5,7 +6,7 @@ use tokio::{
 
 use crate::{commands::Command, data::Request};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Transmission {
     Username(String),
     UsernameOk,
@@ -25,7 +26,7 @@ pub enum Transmission {
 
 impl Transmission {
     pub fn to_bytes(&self) -> Vec<u8> {
-        match *self {
+        let ret = match *self {
             Self::Username(ref user) => Vec::from(format!("\u{1}{}\0", user)),
             Self::UsernameOk => vec![2],
             Self::UsernameTaken => vec![3],
@@ -88,14 +89,18 @@ impl Transmission {
             Self::ClientDisconnected => vec![12],
             Self::GlideRequestSent => vec![13],
             Self::OkSuccess => vec![14],
-        }
+        };
+
+        trace!("Response: {:#?} - {:?}", self, ret.take(10));
+
+        ret
     }
 
     pub async fn from_stream(stream: &mut TcpStream) -> Result<Transmission> {
         loop {
             let first_byte = stream.read_u8().await?; // get the first byte (control byte)
 
-            return match first_byte {
+            let ret = match first_byte {
                 0x0 => continue,
                 0x1 => {
                     // username
@@ -262,6 +267,8 @@ impl Transmission {
                     panic!("somethings really wrong :( {:#?}", wrong);
                 }
             };
+
+            return ret;
         }
     }
 }
